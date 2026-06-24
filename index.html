@@ -69,14 +69,55 @@
     .states { padding: 20px; }
     .cta-band { padding: 40px 20px; }
   }
+
+  /* Cookie Consent Banner */
+  .orn-cookie-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #0d1f37; border-top: 2px solid #C9A45C;
+    padding: 1rem 1.5rem; z-index: 9000;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; flex-wrap: wrap;
+    transform: translateY(100%); transition: transform 0.3s ease;
+    box-shadow: 0 -6px 24px rgba(0,0,0,0.5);
+  }
+  .orn-cookie-bar.show { transform: translateY(0); }
+  .orn-cookie-text { font-size: 13px; color: #A0A0A0; flex: 1; min-width: 200px; }
+  .orn-cookie-text a { color: #C9A45C; }
+  .orn-cookie-btns { display: flex; gap: 8px; flex-shrink: 0; }
+  .orn-cookie-btn {
+    font-size: 12px; font-weight: 700; padding: 7px 16px;
+    border-radius: 4px; border: none; cursor: pointer;
+    letter-spacing: 0.04em; transition: opacity 0.2s;
+  }
+  .orn-cookie-btn:hover { opacity: 0.85; }
+  .orn-btn-reject { background: transparent; color: #A0A0A0; border: 1px solid rgba(255,255,255,0.2); }
+  .orn-btn-accept { background: #C9A45C; color: #000; }
+
 </style>
-  <!-- Google Analytics 4 -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-386948001"></script>
+  <!-- Google Analytics 4 — Consent Mode v2 (GDPR-compliant) -->
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
+    gtag('consent', 'default', {
+      'analytics_storage': 'denied',
+      'ad_storage': 'denied',
+      'ad_user_data': 'denied',
+      'ad_personalization': 'denied',
+      'wait_for_update': 500
+    });
+  </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-386948001"></script>
+  <script>
     gtag('js', new Date());
     gtag('config', 'G-386948001', { anonymize_ip: true });
+    (function(){
+      try {
+        var p = JSON.parse(localStorage.getItem('orn_consent_prefs') || 'null');
+        if (p && p.analytics) gtag('consent', 'update', { 'analytics_storage': 'granted' });
+        else if (!p && localStorage.getItem('orn_consent') === 'accepted')
+          gtag('consent', 'update', { 'analytics_storage': 'granted' });
+      } catch(e) {}
+    })();
   </script>
 </head>
 <body>
@@ -163,8 +204,45 @@
     <a href="https://new.oilrigsnow.com/accessibility/">Accessibility</a>
     <a href="https://new.oilrigsnow.com/compliance/">Compliance</a>
   </p>
-  <p>&copy; 2026 Oil Rigs Now, LLC. All rights reserved. | listings.oilrigsnow.com</p>
+  <p>&copy; 2026 Oil Rigs Now, LLC. All rights reserved. | listings.oilrigsnow.com<br><a href="https://new.oilrigsnow.com/privacy/#ccpa" style="color:#A0A0A0;font-size:12px;font-weight:600;">Do Not Sell or Share My Personal Information</a></p>
 </footer>
+
+
+<!-- Cookie Consent Banner (GDPR Consent Mode v2) -->
+<div class="orn-cookie-bar" id="orn-cookie-bar" role="dialog" aria-label="Cookie consent">
+  <p class="orn-cookie-text">
+    We use cookies (Google Analytics) to understand site usage. No cookies set until you consent.
+    <a href="https://new.oilrigsnow.com/cookies/" target="_blank" rel="noopener">Cookie Policy</a> &bull;
+    <a href="https://new.oilrigsnow.com/privacy/" target="_blank" rel="noopener">Privacy Policy</a>
+  </p>
+  <div class="orn-cookie-btns">
+    <button class="orn-cookie-btn orn-btn-reject" onclick="ornConsent(false)" aria-label="Decline analytics cookies">Decline</button>
+    <button class="orn-cookie-btn orn-btn-accept" onclick="ornConsent(true)" aria-label="Accept analytics cookies">Accept</button>
+  </div>
+</div>
+<script>
+  (function(){
+    var PREFS='orn_consent_prefs', LEGACY='orn_consent';
+    var bar=document.getElementById('orn-cookie-bar');
+    function show(){ bar.classList.add('show'); }
+    function hide(){ bar.classList.remove('show'); }
+    try {
+      var p=JSON.parse(localStorage.getItem(PREFS)||'null');
+      var l=localStorage.getItem(LEGACY);
+      if(!p && !l){ setTimeout(show, 600); }
+    } catch(e){ setTimeout(show, 600); }
+    window.ornConsent = function(yes){
+      var prefs={analytics:yes,marketing:false,v:'2'};
+      try {
+        localStorage.setItem(PREFS, JSON.stringify(prefs));
+        localStorage.setItem(LEGACY, yes?'accepted':'declined');
+      } catch(e){}
+      if(yes && typeof gtag!=='undefined')
+        gtag('consent','update',{'analytics_storage':'granted'});
+      hide();
+    };
+  })();
+</script>
 
 </body>
 </html>
